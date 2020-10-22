@@ -9,4 +9,9 @@ RUN apt update && apt install libncurses5 -y \
 
 USER node
 
-ENTRYPOINT [ "npm", "run", "docker"]
+RUN npm install
+
+RUN npm run webpack:bundle
+
+ENTRYPOINT [ "npm", "run", "serve"]
+
