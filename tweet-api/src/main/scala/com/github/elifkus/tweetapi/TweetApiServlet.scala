@@ -28,10 +28,8 @@ class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsS
 
   post("/api/analysis") {
     println("/api/analysis called")
-    //val tweetInput = parsedBody.extract[TweetInput]
-    println("Input: " + request.body)
     val tweetInput = read[TweetInput](request.body)
-    printlnt(tweetInput.content)
+
     askForToxicity(tweetInput) match {
       case Left(errorOutput) => {
         errorOutput

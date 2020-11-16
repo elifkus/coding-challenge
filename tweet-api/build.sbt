@@ -2,11 +2,12 @@ val ScalatraVersion = "2.7.0"
 
 organization := "com.github.elifkus"
 
-name := "Tweet API"
+name := "TweetAPI"
 
 version := "0.1.0-SNAPSHOT"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.3"
+
 
 resolvers += Classpaths.typesafeReleases
 
@@ -18,12 +19,19 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "core" % "3.0.0-RC9",
   "com.softwaremill.sttp.client3" %% "json4s" % "3.0.0-RC9",
   "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
-  "org.eclipse.jetty" % "jetty-webapp" % "9.4.28.v20200408" % "container",
+  "org.eclipse.jetty" % "jetty-webapp" % "9.4.28.v20200408" % "container;compile",
   "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
   "org.scalatest" %% "scalatest" % "3.0.8" % Test
 )
 
 
-
 enablePlugins(SbtTwirl)
 enablePlugins(ScalatraPlugin)
+
+
+assemblyMergeStrategy in assembly := {
+  case "module-info.class" => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
