@@ -26,9 +26,7 @@ It expects a response in the format:
 }
 ```
 
-<span style='color: red'>
-The `$BASE_URL` environment variable should be set at build time.
-</span>
+**The `$BASE_URL` environment variable needs to be set at build time.**
 
 ## Usage
 
