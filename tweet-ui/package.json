@@ -10,8 +10,7 @@
     "bundle": "npx spago bundle-app --to output/Main.js",
     "webpack:bundle": "npx webpack --config webpack.prod.js",
     "webpack:server": "npx webpack-dev-server --progress --inline --hot --config webpack.dev.js",
-    "serve": "npx http-server -p 9000 dist/",
-    "docker": "npm install && npm run webpack:bundle && npm run serve"
+    "serve": "npx http-server -p 9000 dist/"
   },
   "author": "",
   "license": "UNLICENSED",
