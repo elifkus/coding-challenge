@@ -26,7 +26,9 @@ It expects a response in the format:
 }
 ```
 
-The `$BASE_URL` environment variable can be optionally set, otherwise will default to empty string.
+<span style='color: red'>
+The `$BASE_URL` environment variable should be set at build time.
+</span>
 
 ## Usage
 
@@ -34,8 +36,6 @@ You can run the service locally by running:
 
 ```sh
 npm install
-npm run webpack:server
-# or
 BASE_URL=http://localhost:8080 npm run webpack:server
 ```
 
@@ -49,8 +49,6 @@ To bundle the UI for static website deployment, run
 
 ```sh
 npm install
-npm run webpack:bundle
-# or
 BASE_URL=http://localhost:8080 npm run webpack:bundle
 ```
 
@@ -68,8 +66,8 @@ and open `http://localhost:9000`
 To deploy the UI as a service, you can use the provided [Dockerfile](./docker/Dockerfile) which runs the UI in an integrated HTTP server, e.g. by running:
 
 ```sh
-docker build -t="hivemind/tweet-ui" -f docker/Dockerfile .
-docker run -ti -p 9000:9000 -e BASE_URL=http://localhost:8080 hivemind/tweet-ui:latest
+docker build --build-arg base_url=http://localhost:8080 -t="hivemind/tweet-ui" -f docker/Dockerfile .
+docker run -ti -p 9000:9000 hivemind/tweet-ui:latest
 ```
 
 and open `http://localhost:9000`
