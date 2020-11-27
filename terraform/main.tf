@@ -26,8 +26,8 @@ resource "aws_ecs_task_definition" "sentiment_analysis_task" {
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 9000,
-          "hostPort": 9000
+          "containerPort": ${var.sentiment_api_port},
+          "hostPort": ${var.sentiment_api_port}
         }
       ],
       "logConfiguration": {
@@ -39,7 +39,17 @@ resource "aws_ecs_task_definition" "sentiment_analysis_task" {
             }
         },
       "memory": 512,
-      "cpu": 256
+      "cpu": 256,
+      "environment": [
+                {
+                    "name": "PORT",
+                    "value": "${var.sentiment_api_port}"
+                },
+                {
+                    "name": "HOST",
+                    "value": "${var.sentiment_api_ip}"
+                }
+            ]
     }
   ]
   DEFINITION
@@ -96,7 +106,7 @@ resource "aws_ecs_service" "sentiment_service" {
    load_balancer {
     target_group_arn = aws_lb_target_group.sentiment_lb_target_group.arn
     container_name   = aws_ecs_task_definition.sentiment_analysis_task.family
-    container_port   = 9000 
+    container_port   = var.sentiment_api_port
   }
 
   network_configuration {
@@ -114,8 +124,8 @@ resource "aws_security_group" "service_security_group" {
   vpc_id      = aws_default_vpc.default_vpc.id
 
   ingress {
-    from_port = 9000
-    to_port   = 9000
+    from_port = var.sentiment_api_port
+    to_port   = var.sentiment_api_port
     protocol  = "tcp"
     security_groups = [aws_security_group.load_balancer_security_group.id]
   }
@@ -178,7 +188,7 @@ resource "aws_security_group" "load_balancer_security_group" {
 
 resource "aws_lb_target_group" "sentiment_lb_target_group" {
   name        = "sentiment-lb-target-group"
-  port        = 9000
+  port        = var.sentiment_api_port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_default_vpc.default_vpc.id
@@ -189,7 +199,7 @@ resource "aws_lb_target_group" "sentiment_lb_target_group" {
     timeout = "20"  
     matcher = "200,301,302"
     path = "/"
-    port = "9000"
+    port = var.sentiment_api_port
     protocol = "HTTP"
     interval = "60"
     unhealthy_threshold = "3"
