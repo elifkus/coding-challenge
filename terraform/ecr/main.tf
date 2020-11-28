@@ -13,13 +13,13 @@ provider "aws" {
 }
 
 resource "aws_ecr_repository" "sentiment-analysis-repo" {
-  name = "sentiment-analysis" 
+  name = "hivemind/sentiment-analysis" 
 }
 
 resource "aws_ecr_repository" "tweet-api-repo" {
-  name = "tweet-api" 
+  name = "hivemind/tweet-api" 
 }
 
 resource "aws_ecr_repository" "tweet-ui-repo" {
-  name = "tweet-ui" 
+  name = "hivemind/tweet-ui" 
 }

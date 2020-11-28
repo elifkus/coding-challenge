@@ -16,13 +16,48 @@ resource "aws_ecs_cluster" "hivemind-cluster" {
     name = "hivemind-cluster"
 }
 
+resource "aws_iam_role" "ecsTaskExecutionRole" {
+  name               = "ecsTaskExecutionRole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json 
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
+  role       = aws_iam_role.ecsTaskExecutionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "log_policy" {
+  name        = "log-policy"
+  role = aws_iam_role.ecsTaskExecutionRole.name
+  policy      = data.aws_iam_policy_document.log_policy_doc.json 
+}
+
+data "aws_iam_policy_document" "log_policy_doc" {
+  statement {
+    effect = "Allow"
+    resources = [ "*" ]
+    actions = ["logs:*"]
+  }
+}
+
 resource "aws_ecs_task_definition" "sentiment_analysis_task" {
   family                   = "sentiment-analysis-task" 
   container_definitions    = <<DEFINITION
   [
     {
       "name": "sentiment-analysis-task",
-      "image": "${var.docker_registry}/sentiment-analysis:latest",
+      "image": "${var.docker_registry}/hivemind/sentiment-analysis:latest",
       "essential": true,
       "portMappings": [
         {
@@ -60,41 +95,6 @@ resource "aws_ecs_task_definition" "sentiment_analysis_task" {
   execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
-resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name               = "ecsTaskExecutionRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json 
-}
-
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
-  role       = aws_iam_role.ecsTaskExecutionRole.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-resource "aws_iam_role_policy" "log_policy" {
-  name        = "log-policy"
-  role = aws_iam_role.ecsTaskExecutionRole.name
-  policy      = data.aws_iam_policy_document.log_policy_doc.json 
-}
-
-data "aws_iam_policy_document" "log_policy_doc" {
-  statement {
-    effect = "Allow"
-    resources = [ "*" ]
-    actions = ["logs:*"]
-  }
-}
-
 resource "aws_ecs_service" "sentiment_service" {
   name            = "sentiment-service" 
   cluster         = aws_ecs_cluster.hivemind-cluster.id 
@@ -111,23 +111,108 @@ resource "aws_ecs_service" "sentiment_service" {
 
   network_configuration {
     subnets          = [aws_default_subnet.default_subnet_a.id, aws_default_subnet.default_subnet_b.id, aws_default_subnet.default_subnet_c.id]
-    assign_public_ip = true 
-    security_groups = [ aws_security_group.service_security_group.id ]
+    security_groups = [ aws_security_group.sentiment_service_security_group.id ]
+    assign_public_ip = true
   }
 
-   depends_on = [aws_lb_listener.http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
-
+   depends_on = [aws_lb_listener.sentiment_http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
 }
 
-resource "aws_security_group" "service_security_group" {
-  name = "service-security-group"
+resource "aws_security_group" "sentiment_service_security_group" {
+  name = "sentiment-service-security-group"
   vpc_id      = aws_default_vpc.default_vpc.id
 
   ingress {
     from_port = var.sentiment_api_port
     to_port   = var.sentiment_api_port
     protocol  = "tcp"
-    security_groups = [aws_security_group.load_balancer_security_group.id]
+    security_groups = [aws_security_group.sentiment_load_balancer_security_group.id]
+  }
+
+  egress {
+    from_port   = 0 
+    to_port     = 0 
+    protocol    = "-1" 
+    cidr_blocks = ["0.0.0.0/0"] 
+  }
+}
+
+resource "aws_ecs_task_definition" "tweet_api_task" {
+  family                   = "tweet-api-task" 
+  container_definitions    = <<DEFINITION
+  [
+    {
+      "name": "tweet-api-task",
+      "image": "${var.docker_registry}/hivemind/tweet-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": ${var.tweet_api_port},
+          "hostPort": ${var.tweet_api_port}
+        }
+      ],
+      "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${aws_cloudwatch_log_group.tweetapi_log_group.name}",
+                "awslogs-region": "${var.region}",
+                "awslogs-stream-prefix": "ecs"
+            }
+        },
+      "memory": 512,
+      "cpu": 256,
+      "environment": [
+                {
+                    "name": "PORT",
+                    "value": "${var.tweet_api_port}"
+                },
+                {
+                    "name": "SERVICE_URL",
+                    "value": "http://${aws_alb.sentiment_load_balancer.dns_name}:${var.sentiment_lb_port}"
+                }
+            ]
+    }
+  ]
+  DEFINITION
+  requires_compatibilities = ["FARGATE"] 
+  network_mode             = "awsvpc"    
+  memory                   = 512         
+  cpu                      = 256         
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+}
+
+resource "aws_ecs_service" "tweetapi_service" {
+  name            = "tweetapi-service" 
+  cluster         = aws_ecs_cluster.hivemind-cluster.id 
+  task_definition = aws_ecs_task_definition.tweet_api_task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 3
+  health_check_grace_period_seconds = 60 
+
+   load_balancer {
+    target_group_arn = aws_lb_target_group.tweetapi_lb_target_group.arn
+    container_name   = aws_ecs_task_definition.tweet_api_task.family
+    container_port   = var.tweet_api_port
+  }
+
+  network_configuration {
+    subnets          = [aws_default_subnet.default_subnet_a.id, aws_default_subnet.default_subnet_b.id, aws_default_subnet.default_subnet_c.id]
+    security_groups = [ aws_security_group.tweetapi_service_security_group.id ]
+    assign_public_ip = true
+  }
+
+   depends_on = [aws_lb_listener.tweetapi_http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
+}
+
+resource "aws_security_group" "tweetapi_service_security_group" {
+  name = "tweetapi-service-security-group"
+  vpc_id      = aws_default_vpc.default_vpc.id
+
+  ingress {
+    from_port = var.tweet_api_port
+    to_port   = var.tweet_api_port
+    protocol  = "tcp"
+    security_groups = [aws_security_group.tweetapi_load_balancer_security_group.id]
   }
 
   egress {
@@ -153,10 +238,6 @@ resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "eu-central-1c"
 }
 
-resource "aws_eip" "sentiment_lb_ip" {
-  vpc      = true
-}
-
 resource "aws_alb" "sentiment_load_balancer" {
   name               = "sentiment-load-balancer" 
   load_balancer_type = "application"
@@ -166,14 +247,14 @@ resource "aws_alb" "sentiment_load_balancer" {
     aws_default_subnet.default_subnet_b.id,
     aws_default_subnet.default_subnet_c.id
   ]
-   security_groups = [aws_security_group.load_balancer_security_group.id]
+   security_groups = [aws_security_group.sentiment_load_balancer_security_group.id]
 }
 
-resource "aws_security_group" "load_balancer_security_group" {
+resource "aws_security_group" "sentiment_load_balancer_security_group" {
   vpc_id      = aws_default_vpc.default_vpc.id
   ingress {
-    from_port   = 80 
-    to_port     = 80
+    from_port   = var.sentiment_lb_port 
+    to_port     = var.sentiment_lb_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] 
   }
@@ -206,13 +287,72 @@ resource "aws_lb_target_group" "sentiment_lb_target_group" {
   }
 }
 
-resource "aws_lb_listener" "http_forward" {
+resource "aws_lb_listener" "sentiment_http_forward" {
   load_balancer_arn = aws_alb.sentiment_load_balancer.arn 
-  port              = "80"
+  port              = var.sentiment_lb_port
   protocol          = "HTTP"
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.sentiment_lb_target_group.arn
+  }
+}
+
+resource "aws_alb" "tweetapi_load_balancer" {
+  name               = "tweet-api" 
+  load_balancer_type = "application"
+  idle_timeout = 600
+  subnets = [ 
+    aws_default_subnet.default_subnet_a.id,
+    aws_default_subnet.default_subnet_b.id,
+    aws_default_subnet.default_subnet_c.id
+  ]
+   security_groups = [aws_security_group.tweetapi_load_balancer_security_group.id]
+}
+
+resource "aws_security_group" "tweetapi_load_balancer_security_group" {
+  vpc_id      = aws_default_vpc.default_vpc.id
+  ingress {
+    from_port   = var.tweetapi_lb_port
+    to_port     = var.tweetapi_lb_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] 
+  }
+
+  egress {
+    from_port   = 0 
+    to_port     = 0 
+    protocol    = "-1" 
+    cidr_blocks = ["0.0.0.0/0"] 
+  }
+}
+
+resource "aws_lb_target_group" "tweetapi_lb_target_group" {
+  name        = "tweetapi-lb-target-group2"
+  port        = var.tweet_api_port
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = aws_default_vpc.default_vpc.id
+  lifecycle {
+        create_before_destroy = true
+  }
+  health_check {
+    timeout = "20"  
+    matcher = "200,301,302"
+    path = "/"
+    port = var.tweet_api_port
+    protocol = "HTTP"
+    interval = "60"
+    unhealthy_threshold = "3"
+  }
+}
+
+resource "aws_lb_listener" "tweetapi_http_forward" {
+  load_balancer_arn = aws_alb.tweetapi_load_balancer.arn 
+  port              = var.tweetapi_lb_port
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tweetapi_lb_target_group.arn
   }
 }
 
@@ -225,6 +365,18 @@ resource "aws_cloudwatch_log_stream" "sentiment_log_stream" {
   name           = "sentiment-log-stream"
   log_group_name = aws_cloudwatch_log_group.sentiment_log_group.name
 }
+
+resource "aws_cloudwatch_log_group" "tweetapi_log_group" {
+  name              = "/ecs/tweetapi-log-group"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_stream" "tweetapi_log_stream" {
+  name           = "tweetapi-log-stream"
+  log_group_name = aws_cloudwatch_log_group.tweetapi_log_group.name
+}
+
+
 
 
 
