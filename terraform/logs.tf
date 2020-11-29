@@ -18,3 +18,14 @@ resource "aws_cloudwatch_log_stream" "tweetapi_log_stream" {
   name           = "tweetapi-log-stream"
   log_group_name = aws_cloudwatch_log_group.tweetapi_log_group.name
 }
+
+resource "aws_cloudwatch_log_group" "tweetui_log_group" {
+  name              = "/ecs/tweetui-log-group"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_stream" "tweetui_log_stream" {
+  name           = "tweetui-log-stream"
+  log_group_name = aws_cloudwatch_log_group.tweetapi_log_group.name
+}
+

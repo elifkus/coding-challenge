@@ -223,10 +223,82 @@ resource "aws_security_group" "tweetapi_service_security_group" {
   }
 }
 
+resource "aws_ecs_task_definition" "tweetui_task" {
+  family                   = "tweetui-task"
+  container_definitions    = <<DEFINITION
+  [
+    {
+      "name": "tweetui-task",
+      "image": "${var.docker_registry}/hivemind/tweet-ui:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": ${var.tweet_ui_port},
+          "hostPort": ${var.tweet_ui_port}
+        }
+      ],
+      "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${aws_cloudwatch_log_group.tweetui_log_group.name}",
+                "awslogs-region": "${var.region}",
+                "awslogs-stream-prefix": "ecs"
+            }
+        },
+      "memory": 512,
+      "cpu": 256,
+      "environment": []
+    }
+  ]
+  DEFINITION
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  memory                   = 512
+  cpu                      = 256
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+}
 
+resource "aws_ecs_service" "tweetui_service" {
+  name                              = "tweetui-service"
+  cluster                           = aws_ecs_cluster.hivemind-cluster.id
+  task_definition                   = aws_ecs_task_definition.tweetui_task.arn
+  launch_type                       = "FARGATE"
+  desired_count                     = 3
+  health_check_grace_period_seconds = 60
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.tweetui_lb_target_group.arn
+    container_name   = aws_ecs_task_definition.tweetui_task.family
+    container_port   = var.tweet_ui_port
+  }
 
+  network_configuration {
+    subnets = aws_subnet.private_subnets.*.id
+    security_groups  = [aws_security_group.tweetui_service_security_group.id]
+    assign_public_ip = false
+  }
 
+  depends_on = [aws_lb_listener.tweetapi_http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
+}
+
+resource "aws_security_group" "tweetui_service_security_group" {
+  name   = "tweetui-service-security-group"
+  vpc_id = aws_default_vpc.default_vpc.id
+
+  ingress {
+    from_port       = var.tweet_ui_port
+    to_port         = var.tweet_ui_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.tweetapi_load_balancer_security_group.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 
 

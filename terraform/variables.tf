@@ -25,3 +25,15 @@ variable "tweet_api_port" {
 variable "tweetapi_lb_port" {
   default = "80"
 }
+
+variable "tweet_ui_port" {
+  default = "9000"
+}
+
+variable "tweetui_lb_port" {
+  default = "80"
+}
+
+variable "ui_bucket_name" { 
+  default = "tweetui"
+}
