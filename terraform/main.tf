@@ -110,9 +110,9 @@ resource "aws_ecs_service" "sentiment_service" {
   }
 
   network_configuration {
-    subnets = aws_default_subnet.default_subnets.*.id
+    subnets = aws_subnet.private_subnets.*.id
     security_groups  = [aws_security_group.sentiment_service_security_group.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   depends_on = [aws_lb_listener.sentiment_http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
@@ -196,9 +196,9 @@ resource "aws_ecs_service" "tweetapi_service" {
   }
 
   network_configuration {
-    subnets = aws_default_subnet.default_subnets.*.id
+    subnets = aws_subnet.private_subnets.*.id
     security_groups  = [aws_security_group.tweetapi_service_security_group.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   depends_on = [aws_lb_listener.tweetapi_http_forward, aws_iam_role_policy_attachment.ecsTaskExecutionRole_policy]
@@ -252,7 +252,7 @@ resource "aws_subnet" "private_subnets" {
 resource "aws_nat_gateway" "main_nats" {
   count         = length(aws_subnet.private_subnets)
   allocation_id = element(aws_eip.nat_ips.*.id, count.index)
-  subnet_id     = element(aws_subnet.private_subnets.*.id, count.index)
+  subnet_id     = element(aws_default_subnet.default_subnets.*.id, count.index)
   depends_on    = [aws_internet_gateway.default_vpc_igw]
 }
  
@@ -283,7 +283,8 @@ resource "aws_alb" "sentiment_load_balancer" {
   name               = "sentiment-load-balancer"
   load_balancer_type = "application"
   idle_timeout       = 600
-  subnets = aws_default_subnet.default_subnets.*.id
+  subnets = aws_subnet.private_subnets.*.id
+  internal = true
   security_groups = [aws_security_group.sentiment_load_balancer_security_group.id]
 }
 
