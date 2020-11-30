@@ -10,6 +10,7 @@ import org.json4s.jackson.Serialization.{read, write}
 import org.scalatra.json._
 import sttp.client3._
 import sttp.client3.json4s._
+import sttp.model.Uri
 
 class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsSupport {
   protected implicit val jsonFormats: Formats = DefaultFormats + new SentimentSerializer
@@ -28,10 +29,8 @@ class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsS
 
   post("/api/analysis") {
     println("/api/analysis called")
-    //val tweetInput = parsedBody.extract[TweetInput]
-    println("Input: " + request.body)
     val tweetInput = read[TweetInput](request.body)
-    printlnt(tweetInput.content)
+
     askForToxicity(tweetInput) match {
       case Left(errorOutput) => {
         errorOutput
@@ -46,7 +45,9 @@ class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsS
 
   def askForToxicity(tweetInput: TweetInput): Either[String, List[SentimentAnalysisOutput]] = {
     val payload = SentimentAnalysisInput(Array(tweetInput.content), 0.9)
-    val request = basicRequest.post(uri"http://localhost:9000/toxicity")
+    val serviceUrl = if(System.getenv("SERVICE_URL") != null) System.getenv("SERVICE_URL") else "http://localhost:9000"
+
+    val request = basicRequest.post(uri"$serviceUrl/toxicity")
       .body(write(payload))
       .contentType("application/json")
       .response(asJson[List[SentimentAnalysisOutput]])
