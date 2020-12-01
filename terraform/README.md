@@ -15,5 +15,53 @@ There is a second load balancer for the sentiment analysis target group which co
 All Fargate tasks have outbound internet connection over the NAT located in the public network. 
 
 
+## Deployment - Step by Step
+
+I chose to use Terraform for the deployment. 
+
+For the setup, the following steps have to be taken.
+
+### 1. Create ECR registries for the Docker images
+
+```
+cd coding-challenge/terraform/ecr
+terraform init
+terraform apply
+```
+Copy the ECR registry URL.
+
+### 2. Build images for Tweet API and Sentiment Analysis, then upload to ECR
+
+Copy the ECR base url into the file build-and-push-api-images.sh
+
+```
+cd coding-challenge
+./build-and-push-api-images.sh
+```
+
+### 3. Create the AWS infrastructure and copy the URL for the Tweet API load balancer.  
+
+```
+cd coding-challenge/terraform
+terraform init
+terraform apply
+```
+Copy the URL for the Tweet API load balancer. 
+
+### 4. Build the image for the Tweet UI using the URL for the load balancer and upload to ECR.
+
+Copy the URL for the Tweet API load balancer into the file build-and-push-ui-image.sh
+
+```
+cd coding-challenge
+./build-and-push-ui-image.sh
+```
+
+### 5. Test the service at the load balancer URL. 
+
+Type in your browser the Tweet API load balancer url.  
+
+
+
 
 
