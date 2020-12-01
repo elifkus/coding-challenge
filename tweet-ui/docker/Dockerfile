@@ -19,6 +19,8 @@ ENV BASE_URL $base_url
 
 RUN npm run webpack:bundle
 
+#horrible workaround for post url not being replaced with $BASE_URL (even though $BASE_URL gets picked up by the application)
+RUN sed -i "s|http://localhost:8080|$base_url|g" dist/bundle.js
 
 FROM node:13-slim
 

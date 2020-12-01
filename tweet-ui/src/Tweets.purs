@@ -71,6 +71,7 @@ reducer url state (SendTweet content) = { state, effects: [ effects ] }
   where
   effects = do
     log $ "Sending tweet " <> content
+    log $ "Sending tweet to " <> url
     response <- fetch (M.URL (url <> "/api/analysis")) { method: M.postMethod, body: JSON.writeJSON { content: content } }
     let
       toAnalysis :: String -> Either String Analysis
