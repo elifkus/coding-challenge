@@ -4,7 +4,7 @@ For the highly available deployment of the Tweet UI, Tweet API and Sentiment Ana
 
 The architecture as in the diagram below:
 
-![AWS Diagram](https://github.com/elifkus/coding-challenge/blob/master/terraform/aws-diagram.png?raw=true)
+<img src="https://github.com/elifkus/coding-challenge/blob/master/terraform/aws-diagram.png?raw=true" alt="AWS Diagram" width="800"/>
 
 I created public subnets and private subnets within the default VPC. In the public subnet I put an application load balancer that directs traffic to two target groups. Additionally there is the NAT that directs traffic from the elements in the private subnet to the internet gateway.  
 
