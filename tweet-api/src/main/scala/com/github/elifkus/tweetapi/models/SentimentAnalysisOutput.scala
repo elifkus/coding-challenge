@@ -8,13 +8,13 @@ case class SentimentAnalysisOutput(
                                    )
 
 case class SentimentReport(
-                            identityAttack: Sentiment,
-                            insult: Sentiment,
-                            obscene: Sentiment,
-                            severeToxicity: Sentiment,
-                            sexualExplicit: Sentiment,
-                            threat: Sentiment,
-                            toxicity: Sentiment
+                            identityAttack: Option[Sentiment],
+                            insult: Option[Sentiment],
+                            obscene: Option[Sentiment],
+                            severeToxicity: Option[Sentiment],
+                            sexualExplicit: Option[Sentiment],
+                            threat: Option[Sentiment],
+                            toxicity: Option[Sentiment]
                           )
 
 case class Sentiment(

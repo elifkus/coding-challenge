@@ -66,15 +66,43 @@ class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsS
 
   def extractApiOutput(input: TweetInput, sentimentOutputList: List[SentimentAnalysisOutput]): Analysis = {
     val sentimentOutput = sentimentOutputList.filter(_.label.equals(input.content)).head
+    
+    val analysis = new Analysis()
+    
+    analysis.identityAttack = sentimentOutput.sentiment.identityAttack match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
 
-    val analysis = new Analysis(sentimentOutput.sentiment.identityAttack.sentimentmatch,
-      sentimentOutput.sentiment.insult.sentimentmatch,
-      sentimentOutput.sentiment.obscene.sentimentmatch,
-      sentimentOutput.sentiment.severeToxicity.sentimentmatch,
-      sentimentOutput.sentiment.sexualExplicit.sentimentmatch,
-      sentimentOutput.sentiment.threat.sentimentmatch,
-      sentimentOutput.sentiment.toxicity.sentimentmatch
-    )
+    analysis.insult = sentimentOutput.sentiment.insult match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
+
+    analysis.obscene = sentimentOutput.sentiment.obscene match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
+
+    analysis.severeToxicity = sentimentOutput.sentiment.severeToxicity match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
+
+    analysis.sexualExplicit = sentimentOutput.sentiment.sexualExplicit match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
+
+    analysis.threat = sentimentOutput.sentiment.threat match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
+
+    analysis.toxicity = sentimentOutput.sentiment.toxicity match {
+      case Some(item) =>  Some(item.sentimentmatch)
+      case None => None
+    }
     analysis
   }
 }

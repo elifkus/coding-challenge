@@ -23,13 +23,13 @@ class TweetApiServletTests extends ScalatraFunSuite {
     val threat = Sentiment(true, 0.98, 0.01)
     val toxicity = Sentiment(true, 0.98, 0.01)
 
-    val sentimentReport = SentimentReport(identityAttack,
-                                              insult,
-                                              obscene,
-                                              severeToxicity,
-                                              sexualExplicit,
-                                              threat,
-                                              toxicity)
+    val sentimentReport = SentimentReport(Some(identityAttack),
+                                          Some(insult),
+                                          Some(obscene),
+                                          Some(severeToxicity),
+                                          Some(sexualExplicit),
+                                          Some(threat),
+                                          Some(toxicity))
     
     val sentimentAnalysisOutput = SentimentAnalysisOutput("Horrible sentence", sentimentReport)
     val resultList = List(sentimentAnalysisOutput)
@@ -38,11 +38,11 @@ class TweetApiServletTests extends ScalatraFunSuite {
     val servlet = new TweetApiServlet()
     val analysis = servlet.extractApiOutput(tweetInput, resultList)
 
-    assert(obscene.sentimentmatch === analysis.obscene)
-    assert(insult.sentimentmatch === analysis.insult)
+    assert(Some(obscene.sentimentmatch) === analysis.obscene)
+    assert(Some(insult.sentimentmatch) === analysis.insult)
   }
 
-  /*test("extractApiOutput extracts content when one field misses") {
+  test("extractApiOutput extracts content when one field misses") {
     val identityAttack = Sentiment(true, 0.98, 0.01)
     val obscene = Sentiment(true, 0.98, 0.01)
     val severeToxicity = Sentiment(false, 0.50, 0.01)
@@ -65,8 +65,9 @@ class TweetApiServletTests extends ScalatraFunSuite {
     val servlet = new TweetApiServlet()
     val analysis = servlet.extractApiOutput(tweetInput, resultList)
 
-    assert(obscene.sentimentmatch === analysis.obscene)
+    assert(Some(obscene.sentimentmatch) === analysis.obscene)
+    assert(None === analysis.insult)
 
   }
-*/
+
 }
