@@ -1,8 +1,8 @@
 #!/bin/bash -xv
-ECR_REPO=401172141612.dkr.ecr.eu-central-1.amazonaws.com
-TWEETAPI_SERVICE_URL=http://tweet-api-278176414.eu-central-1.elb.amazonaws.com
+ECR_REPO=<REPO_URL>
+TWEETAPI_SERVICE_URL=<TWEETAPI_SERVICE_URL>
 
-aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REPO
+aws ecr get-login-password --profile hivemind --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REPO
 
 #build and push tweet ui
 cd tweet-ui

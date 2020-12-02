@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "docker_registry" {
-  default = "401172141612.dkr.ecr.eu-central-1.amazonaws.com"
+  default = "<docker_registry>"
 }
 
 variable "sentiment_api_port" {
@@ -32,8 +32,4 @@ variable "tweet_ui_port" {
 
 variable "tweetui_lb_port" {
   default = "80"
-}
-
-variable "ui_bucket_name" { 
-  default = "tweetui"
 }

@@ -100,7 +100,7 @@ resource "aws_lb_target_group" "tweetapi_lb_target_group" {
 }
 
 resource "aws_lb_target_group" "tweetui_lb_target_group" {
-  name        = "tweetui-lb-target-group"
+  name        = "tweetui-lb-target-group2"
   port        = var.tweet_ui_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -112,7 +112,7 @@ resource "aws_lb_target_group" "tweetui_lb_target_group" {
     timeout             = "20"
     matcher             = "200,301,302"
     path                = "/index.html"
-    port                = var.tweet_api_port
+    port                = var.tweet_ui_port
     protocol            = "HTTP"
     interval            = "60"
     unhealthy_threshold = "3"
@@ -132,7 +132,7 @@ resource "aws_lb_listener" "tweetapi_http_forward" {
 
 resource "aws_lb_listener_rule" "forward_api_to_tweetapi" {
   listener_arn = aws_lb_listener.tweetapi_http_forward.arn
-  priority     = 100
+  priority     = 20
 
   action {
     type             = "forward"

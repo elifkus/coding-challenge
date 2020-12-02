@@ -43,9 +43,13 @@ cd coding-challenge
 
 ### 3. Create the AWS infrastructure and copy the URL for the Tweet API load balancer.  
 
+Copy the ECR registry into variables.tf in the terraform folder.
+Find the internet gateway id and replace it in the terraform import command below
 ```
 cd coding-challenge/terraform
 terraform init
+terraform import aws_internet_gateway.default_vpc_igw igw-11aa1a1a
+terraform apply -target=aws_subnet.private_subnets
 terraform apply
 ```
 Copy the URL for the Tweet API load balancer. 

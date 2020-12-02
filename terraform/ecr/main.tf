@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  profile = "default"
+  profile = "hivemind"
   region  = "eu-central-1"
 }
 
