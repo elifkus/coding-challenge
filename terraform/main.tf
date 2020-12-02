@@ -8,11 +8,11 @@ terraform {
 }
 
 provider "aws" {
-  profile = "default"
+  profile = "hivemind"
   region  = var.region
 }
 
-resource "aws_ecs_cluster" "hivemind-cluster" {
+resource "aws_ecs_cluster" "hivemind_cluster" {
   name = "hivemind-cluster"
 }
 
@@ -97,7 +97,7 @@ resource "aws_ecs_task_definition" "sentiment_analysis_task" {
 
 resource "aws_ecs_service" "sentiment_service" {
   name                              = "sentiment-service"
-  cluster                           = aws_ecs_cluster.hivemind-cluster.id
+  cluster                           = aws_ecs_cluster.hivemind_cluster.id
   task_definition                   = aws_ecs_task_definition.sentiment_analysis_task.arn
   launch_type                       = "FARGATE"
   desired_count                     = 3
@@ -183,7 +183,7 @@ resource "aws_ecs_task_definition" "tweet_api_task" {
 
 resource "aws_ecs_service" "tweetapi_service" {
   name                              = "tweetapi-service"
-  cluster                           = aws_ecs_cluster.hivemind-cluster.id
+  cluster                           = aws_ecs_cluster.hivemind_cluster.id
   task_definition                   = aws_ecs_task_definition.tweet_api_task.arn
   launch_type                       = "FARGATE"
   desired_count                     = 3
@@ -260,7 +260,7 @@ resource "aws_ecs_task_definition" "tweetui_task" {
 
 resource "aws_ecs_service" "tweetui_service" {
   name                              = "tweetui-service"
-  cluster                           = aws_ecs_cluster.hivemind-cluster.id
+  cluster                           = aws_ecs_cluster.hivemind_cluster.id
   task_definition                   = aws_ecs_task_definition.tweetui_task.arn
   launch_type                       = "FARGATE"
   desired_count                     = 3
