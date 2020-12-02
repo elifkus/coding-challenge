@@ -1,4 +1,4 @@
-# Deployment
+# Infrastructure
 
 For the highly available deployment of the Tweet UI, Tweet API and Sentiment Analysis, I chose AWS Fargate with ECS. Fargate is a serverless compute engine for containers. 
 
