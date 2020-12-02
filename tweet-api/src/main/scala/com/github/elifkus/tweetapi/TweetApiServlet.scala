@@ -71,37 +71,37 @@ class TweetApiServlet extends ScalatraServlet with JacksonJsonSupport with CorsS
     
     analysis.identityAttack = sentimentOutput.sentiment.identityAttack match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.insult = sentimentOutput.sentiment.insult match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.obscene = sentimentOutput.sentiment.obscene match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.severeToxicity = sentimentOutput.sentiment.severeToxicity match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.sexualExplicit = sentimentOutput.sentiment.sexualExplicit match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.threat = sentimentOutput.sentiment.threat match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
 
     analysis.toxicity = sentimentOutput.sentiment.toxicity match {
       case Some(item) =>  Some(item.sentimentmatch)
-      case None => None
+      case None => Some(false)
     }
     analysis
   }

@@ -66,7 +66,7 @@ class TweetApiServletTests extends ScalatraFunSuite {
     val analysis = servlet.extractApiOutput(tweetInput, resultList)
 
     assert(Some(obscene.sentimentmatch) === analysis.obscene)
-    assert(None === analysis.insult)
+    assert(Some(false) === analysis.insult)
 
   }
 
