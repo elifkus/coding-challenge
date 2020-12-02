@@ -7,6 +7,6 @@ aws ecr get-login-password --region eu-central-1 | docker login --username AWS -
 #build and push tweet ui
 cd tweet-ui
 
-docker build --build-arg base_url=$TWEETAPI_SERVICE_URL -t hivemind/tweet-ui -f docker/Dockerfile .
+docker build --no-cache --build-arg base_url=$TWEETAPI_SERVICE_URL -t hivemind/tweet-ui -f docker/Dockerfile .
 docker tag hivemind/tweet-ui:latest $ECR_REPO/hivemind/tweet-ui:latest
 docker push $ECR_REPO/hivemind/tweet-ui:latest
